@@ -23,7 +23,7 @@ ext-action-binder-v1.c: ${PROTOPREFIX}/wayland-protocols/staging/ext-action-bind
 	wayland-scanner private-code < $< > $@
 
 config.h: config.def.h
-	cp $< $@
+	cp --backup $< $@
 
 whd.o: whd.c ext-action-binder-v1.h config.h
 
