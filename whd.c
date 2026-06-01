@@ -1,14 +1,19 @@
+#include <fcntl.h>                    // for open, O_CLOEXEC, O_CREAT, O_RDWR
 #include <stdint.h>                   // for uint32_t
 #include <stdio.h>                    // for perror, printf, fprintf
 #include <stdlib.h>                   // for free, malloc, exit
 #include <string.h>                   // for strcmp
+#include <sys/stat.h>                 // for S_IRUSR, S_IWUSR
+#include <sys/file.h>                 // for flock
 #include <unistd.h>                   // for daemon, fork
 #include <wayland-client-core.h>      // for wl_display
 #include <wayland-client-protocol.h>  // for wl_registry_listener
 #include <wayland-util.h>             // for wl_interface
 #include "ext-action-binder-v1.h"     // for ext_action_binding_v1_listener
 
+struct ext_action_binder_v1;
 struct ext_action_binding_v1;
+struct wl_display;
 struct wl_registry;
 
 #include "config.h"
@@ -51,7 +56,6 @@ on_reject(void *data, struct ext_action_binding_v1 *ext_action_binding_v1) {
 void
 on_trigger(void *data, struct ext_action_binding_v1 *ext_action_binding_v1, uint32_t time, enum ext_action_binding_v1_trigger_type type) {
 	char **cmd = data;
-
 	if (!fork()) {
 		execv(cmd[0], cmd);
 	}
@@ -135,10 +139,20 @@ cleanup:
 
 int
 main(int argc, char **argv) {
+	int pidfd, len;
+	char pidstr[20];
 	struct wl_display *display = NULL;
 	struct ext_action_binder_v1 *binder = NULL;
 
-	int ret = EXIT_FAILURE;
+	if ((pidfd = open(pidfile, O_CREAT | O_CLOEXEC | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
+		perror("Could not create pidfile");
+		goto cleanup;
+	}
+
+	if (flock(pidfd, LOCK_EX | LOCK_NB) < 0) {
+		perror("Could not lock pidfile");
+		goto cleanup;
+	}
 
 	if (!(display = wl_display_connect(NULL))) {
 		perror("Could not connect to display");
@@ -159,8 +173,20 @@ main(int argc, char **argv) {
 
 	ext_action_binder_v1_commit(binder);
 
-	if (daemon(0, 1)) {
+	if (wl_display_roundtrip(display) < 0) {
+		perror("Could not commit bindings");
+		goto cleanup;
+	}
+
+	if (daemon(0, 0)) {
 		perror("Could not daemonize");
+		goto cleanup;
+	}
+
+	len = snprintf(pidstr, 20, "%d", getpid());
+
+	if (write(pidfd, pidstr, len) < len) {
+		perror("Could not write pid to file");
 		goto cleanup;
 	}
 
@@ -168,7 +194,9 @@ main(int argc, char **argv) {
 	perror("Could not process wayland messages");
 
 cleanup:
-	ext_action_binder_v1_destroy(binder);
-	wl_display_disconnect(display);
-	return ret;
+	if (binder)
+		ext_action_binder_v1_destroy(binder);
+	if (display)
+		wl_display_disconnect(display);
+	return EXIT_FAILURE;
 }

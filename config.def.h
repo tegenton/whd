@@ -2,6 +2,8 @@
 
 #define CMD(c) (const char*[]){"/bin/sh", "-c", c, NULL}
 
+static const char *pidfile = "/var/run/whd.pid";
+
 typedef struct {
 	const char *sym;
 	const char *category;
