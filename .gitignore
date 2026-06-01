@@ -1,0 +1,13 @@
+# User customization
+config.h
+
+#wayland protocol
+ext-action-binder-v1.c
+ext-action-binder-v1.h
+
+# Object files
+*.o
+
+# Compiled binary and release
+whd
+*.tar.gz

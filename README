@@ -1,0 +1,27 @@
+whd - wayland hotkey daemon
+=================================
+wclip binds global hotkeys to shell commands.
+
+
+Requirements
+------------
+wclip uses the ext-action-binder-v1 Wayland extension in addition to the base
+wayland-client library.
+
+
+Installation
+------------
+Edit config.mk to match your preferences (especially where you have the
+wayland-protocols installed). Then installation is as simple as:
+
+$ make
+# make install
+
+
+Usage
+-----
+See the man page.
+
+Configuration
+-------------
+Edit config.h and (re)compile.
