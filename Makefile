@@ -25,9 +25,11 @@ ext-action-binder-v1.c: ${PROTOPREFIX}/wayland-protocols/staging/ext-action-bind
 config.h: config.def.h
 	cp --backup $< $@
 
-whd.o: whd.c ext-action-binder-v1.h config.h
+wayland.o: wayland.c wayland.h ext-action-binder-v1.h
 
-whd: whd.o ext-action-binder-v1.o
+whd.o: whd.c config.h
+
+whd: whd.o wayland.o ext-action-binder-v1.o
 	${CC} -o $@ $^ ${LDFLAGS}
 
 clean:
