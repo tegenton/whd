@@ -3,5 +3,16 @@
 whd \- wayland hotkey daemon
 .SH SYNOPSIS
 .B whd
+.RB [ \-k | \-r | \-s ]
 .SH DESCRIPTION
 whd binds global hotkeys to shell commands.
+.SH OPTIONS
+.TP
+.B \-k
+Kill daemon if it is running.
+.TP
+.B \-r
+Restart daemon if it is running.
+.TP
+.B \-s
+Start daemon if it is not running. This is the default behavior.
