@@ -1,6 +1,6 @@
 whd - wayland hotkey daemon
 =================================
-wclip binds global hotkeys to shell commands.
+whd binds global hotkeys to shell commands.
 
 
 Requirements
