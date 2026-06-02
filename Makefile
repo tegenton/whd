@@ -27,7 +27,7 @@ config.h: config.def.h
 
 wayland.o: wayland.c wayland.h ext-action-binder-v1.h
 
-whd.o: whd.c config.h
+whd.o: whd.c config.h ext-action-binder-v1.h
 
 whd: whd.o wayland.o ext-action-binder-v1.o
 	${CC} -o $@ $^ ${LDFLAGS}
