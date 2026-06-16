@@ -1,6 +1,6 @@
 #include <errno.h>                 // for errno
 #include <fcntl.h>                 // for open
-#include <signal.h>                // for kill
+#include <signal.h>                // for kill, sigaction
 #include <stdio.h>                 // for perror, printf, fprintf
 #include <stdlib.h>                // for atol, free, malloc, exit
 #include <sys/stat.h>              // for S_IRUSR, S_IWUSR
@@ -64,6 +64,7 @@ restart_daemon() {
 int start_daemon() {
 	int len, pidfd;
 	char pidstr[25];
+	struct sigaction sig;
 	struct wl_display *display = NULL;
 	struct ext_action_binder_v1 *binder = NULL;
 
@@ -71,6 +72,14 @@ int start_daemon() {
 		perror("Could not create pidfile");
 		return EXIT_FAILURE;
 	}
+
+	if (sigemptyset(&sig.sa_mask)) {
+		perror("Could not empty signal mask");
+		return EXIT_FAILURE;
+	}
+
+	sig.sa_handler = SIG_DFL;
+	sig.sa_flags = SA_NOCLDWAIT;
 
 	if (!(display = wl_display_connect(NULL))) {
 		perror("Could not connect to display");
@@ -98,6 +107,11 @@ int start_daemon() {
 
 	if (daemon(0, 0)) {
 		perror("Could not daemonize");
+		goto cleanup;
+	}
+
+	if (sigaction(SIGCHLD, &sig, NULL)) {
+		perror("Could not ignore SIGCHLD");
 		goto cleanup;
 	}
 
